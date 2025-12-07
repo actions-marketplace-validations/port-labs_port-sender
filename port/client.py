@@ -2,13 +2,14 @@ import logging
 
 import requests
 
+from port.utils import get_port_url
 
 logger = logging.getLogger(__name__)
 
 
 class PortClient:
-    def __init__(self, api_url: str, client_id:str, client_secret:str):
-        self.api_url = api_url
+    def __init__(self, region: str, client_id: str, client_secret: str):
+        self.api_url = get_port_url(region, "api")
         self.access_token = self.get_token(client_id, client_secret)
         self.headers = {
             "Authorization": f"Bearer {self.access_token}",
@@ -28,12 +29,15 @@ class PortClient:
             f"{self.api_url}/v1/entities/search",
             json=query,
             headers=self.headers,
-            params={
-                # "exclude_calculated_properties": "true",
-                # "include": ["blueprint", "identifier"],
-            },
+            params={},
         )
         search_req.raise_for_status()
         return search_req.json()["entities"]
 
-
+    def get_scorecard(self, blueprint_id: str, scorecard_id: str):
+        scorecard_req = requests.get(
+            f"{self.api_url}/v1/blueprints/{blueprint_id}/scorecards/{scorecard_id}",
+            headers=self.headers,
+        )
+        scorecard_req.raise_for_status()
+        return scorecard_req.json()
